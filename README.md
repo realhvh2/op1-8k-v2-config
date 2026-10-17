@@ -2,7 +2,7 @@
 
 A browser-based configurator for the **Endgame Gear OP1 8k v2** mouse, so it can be set up on Linux (or anywhere) without the Windows-only official tool.
 
-**Open it:** https://xxsinkingxxv2-glitch.github.io/op1-8k-v2-config/
+**Open it:** https://realhvh2.github.io/op1-8k-v2-config/
 
 Not affiliated with or endorsed by Endgame Gear.
 
