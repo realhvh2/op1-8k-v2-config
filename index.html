@@ -1,0 +1,612 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OP1 8k v2 Config</title>
+<style>
+:root {
+  --bg: #f4f4f2; --panel: #ffffff; --text: #1b1b1a; --muted: #6a6a66; --line: #deded9;
+  --accent: #d4380d; --accent-text: #ffffff; --ok: #237a3b; --warn: #a35a00; --err: #b3261e;
+  --input: #fafaf8;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #121212; --panel: #1c1c1b; --text: #ecece8; --muted: #9a9a94; --line: #2e2e2c;
+    --accent: #ff5a24; --accent-text: #120a06; --ok: #5fc27a; --warn: #f0a74a; --err: #ff7a70;
+    --input: #232322;
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text);
+  font: 14px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+header { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between;
+  padding: 16px; border-bottom: 1px solid var(--line); background: var(--panel); position: sticky; top: 0; z-index: 5; }
+h1 { font-size: 16px; margin: 0; letter-spacing: .02em; }
+h1 small { color: var(--muted); font-weight: 400; margin-left: 6px; }
+main { max-width: 920px; margin: 0 auto; padding: 16px; }
+button { font: inherit; border: 1px solid var(--line); background: var(--input); color: var(--text);
+  padding: 7px 14px; border-radius: 6px; cursor: pointer; }
+button:hover:not(:disabled) { border-color: var(--muted); }
+button.primary { background: var(--accent); color: var(--accent-text); border-color: var(--accent); font-weight: 600; }
+button:disabled { opacity: .45; cursor: not-allowed; }
+.row-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+#status { color: var(--muted); font-size: 13px; }
+#status.ok { color: var(--ok); } #status.err { color: var(--err); } #status.warn { color: var(--warn); }
+nav { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 12px; }
+nav button { border-radius: 6px 6px 0 0; border-bottom: none; background: transparent; }
+nav button.active { background: var(--panel); border-color: var(--line); font-weight: 600; }
+section.tab { display: none; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 16px; }
+section.tab.active { display: block; }
+.grid { display: grid; grid-template-columns: minmax(150px, 220px) 1fr; gap: 10px 16px; align-items: center; }
+.grid > label { color: var(--muted); }
+h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 22px 0 10px; }
+h2:first-child { margin-top: 0; }
+select, input[type=number], input[type=text] { font: inherit; color: var(--text); background: var(--input);
+  border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; min-width: 0; }
+input[type=number] { width: 96px; }
+input[type=range] { width: 100%; accent-color: var(--accent); }
+input[type=checkbox], input[type=radio] { accent-color: var(--accent); width: 16px; height: 16px; vertical-align: middle; }
+.check { display: inline-flex; gap: 8px; align-items: center; cursor: pointer; }
+.stage { display: grid; grid-template-columns: 28px 70px 1fr 104px; gap: 8px 10px; align-items: center;
+  padding: 10px 0; border-top: 1px solid var(--line); }
+.stage:first-of-type { border-top: none; }
+.stage .axis { color: var(--muted); text-align: right; }
+.stage.off { opacity: .4; }
+.btnmap { display: grid; grid-template-columns: minmax(110px, 160px) 1fr; gap: 10px 12px; align-items: start;
+  padding: 10px 0; border-top: 1px solid var(--line); }
+.btnmap:first-child { border-top: none; }
+.btnmap .extra { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; margin-top: 8px; }
+.filter { display: grid; grid-template-columns: minmax(130px, 200px) 1fr 52px; gap: 8px 12px; align-items: center; padding: 8px 0; }
+.filter .val { text-align: right; font-variant-numeric: tabular-nums; }
+.note { color: var(--muted); font-size: 13px; margin: 8px 0 0; }
+.warnbox { border: 1px solid var(--warn); color: var(--warn); border-radius: 6px; padding: 10px 12px; margin: 12px 0; font-size: 13px; }
+.keycap { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; padding: 5px 10px; min-width: 120px; text-align: left; }
+.keycap.listening { border-color: var(--accent); color: var(--accent); }
+pre { background: var(--input); border: 1px solid var(--line); border-radius: 6px; padding: 10px; overflow-x: auto;
+  font: 12px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; }
+#connectPanel { text-align: center; padding: 48px 16px; }
+#connectPanel p { color: var(--muted); max-width: 520px; margin: 10px auto 18px; }
+.dirty { color: var(--warn); font-size: 13px; }
+@media (max-width: 600px) {
+  .grid { grid-template-columns: 1fr; gap: 4px 0; } .grid > label { margin-top: 8px; }
+  .stage { grid-template-columns: 28px 1fr 90px; } .stage .slider { grid-column: 1 / -1; }
+  .btnmap, .filter { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<header>
+  <h1>Endgame Gear OP1 8k v2 <small id="fw"></small></h1>
+  <div class="row-actions">
+    <span id="dirty" class="dirty" hidden>Unsaved changes</span>
+    <span id="status">Not connected</span>
+    <button id="btnConnect" class="primary">Connect mouse</button>
+    <button id="btnReload" disabled>Reload from mouse</button>
+    <button id="btnApply" class="primary" disabled>Apply</button>
+  </div>
+</header>
+<main>
+  <div id="connectPanel">
+    <h2 style="text-transform:none;font-size:18px;color:var(--text)">Connect your mouse</h2>
+    <p>Click <b>Connect mouse</b>, pick “Endgame Gear OP1 8k v2” in the browser popup, and your current settings will load.
+       Nothing is written to the mouse until you press <b>Apply</b>.</p>
+    <p id="nohid" class="warnbox" hidden>This browser has no WebHID support. Open this page in Chromium, Chrome, Edge, Brave or Helium.</p>
+    <p class="note">Linux: your user needs access to the mouse first. Install
+      <a href="70-endgamegear.rules" download>this udev rule</a> once:<br>
+      <code>sudo cp 70-endgamegear.rules /etc/udev/rules.d/ &amp;&amp; sudo udevadm control --reload &amp;&amp; sudo udevadm trigger</code></p>
+    <p class="note">Unofficial tool, not affiliated with or endorsed by Endgame Gear. Firmware updates are not supported; use the official tool for those.</p>
+  </div>
+
+  <div id="app" hidden>
+    <nav>
+      <button data-tab="basic" class="active">Basic</button>
+      <button data-tab="sensor">Advanced Sensor</button>
+      <button data-tab="buttons">Buttons</button>
+      <button data-tab="mapping">Button Mapping</button>
+      <button data-tab="device">Device</button>
+    </nav>
+
+    <section class="tab active" id="tab-basic">
+      <h2>General</h2>
+      <div class="grid">
+        <label for="polling">Polling rate</label>
+        <select id="polling"></select>
+        <label for="lod">Lift-off distance</label>
+        <select id="lod"></select>
+        <label>Options</label>
+        <div style="display:flex;flex-wrap:wrap;gap:8px 20px">
+          <label class="check"><input type="checkbox" id="angleSnap"> Angle snapping</label>
+          <label class="check"><input type="checkbox" id="ledLiftOff"> Disable LED on lift-off</label>
+        </div>
+      </div>
+
+      <h2>CPI</h2>
+      <div class="grid">
+        <label for="stageCount">CPI levels</label>
+        <select id="stageCount"><option>1</option><option>2</option><option>3</option><option>4</option></select>
+        <label>Separate X / Y</label>
+        <label class="check"><input type="checkbox" id="xySplit"> Set X and Y CPI separately</label>
+      </div>
+      <p class="note">The dot marks the active stage. CPI goes from 10 to 30000, in steps of 10 up to 10000 and steps of 50 above that.</p>
+      <div id="stages"></div>
+    </section>
+
+    <section class="tab" id="tab-sensor">
+      <div class="grid">
+        <label>Sensor</label>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <label class="check"><input type="checkbox" id="motionSync"> Motion Sync</label>
+          <label class="check"><input type="checkbox" id="jitter"> Motion Jitter Filter</label>
+          <label class="check"><input type="checkbox" id="maxFps"> Force max sensor fps</label>
+          <label class="check"><input type="checkbox" id="glass" disabled> Sensor Glass Mode <span class="note" style="margin:0">(reported by the mouse, read-only)</span></label>
+        </div>
+        <label for="downshift">CPI Downshift Tuning</label>
+        <select id="downshift">
+          <option value="2">Force Off</option>
+          <option value="3">Light Timer Only</option>
+          <option value="1">Medium Timer Only</option>
+          <option value="0">Default</option>
+        </select>
+        <label for="smoothing">Smoothing / Ripple</label>
+        <select id="smoothing">
+          <option value="2">Force Off</option>
+          <option value="0">Ripple Control Off</option>
+          <option value="1">Ripple Control On</option>
+        </select>
+        <label for="angle">Sensor Angle Tuning</label>
+        <div style="display:flex;gap:12px;align-items:center">
+          <input type="range" id="angle" min="-127" max="127" step="1">
+          <input type="number" id="angleNum" min="-127" max="127" step="1">
+        </div>
+      </div>
+    </section>
+
+    <section class="tab" id="tab-buttons">
+      <label class="check"><input type="checkbox" id="slam"> Slamclick Filter</label>
+      <h2>Multiclick filter</h2>
+      <label class="check" style="align-items:flex-start"><input type="checkbox" id="ack" style="margin-top:2px">
+        <span>I understand that the Multiclick Filter is not a traditional debounce slider. Lower values don't affect click latency.</span></label>
+      <div id="filters" style="margin-top:10px"></div>
+    </section>
+
+    <section class="tab" id="tab-mapping">
+      <label class="check"><input type="checkbox" id="leftHanded"> Left-handed mode (swaps left and right buttons)</label>
+      <div id="mappings" style="margin-top:12px"></div>
+    </section>
+
+    <section class="tab" id="tab-device">
+      <h2>Device</h2>
+      <div class="grid">
+        <label>Firmware</label><span id="fwInfo">–</span>
+      </div>
+      <h2>Backup</h2>
+      <div class="row-actions">
+        <button id="btnExport">Save settings to file</button>
+        <button id="btnImport">Load settings from file</button>
+        <input type="file" id="importFile" accept=".json,application/json" hidden>
+      </div>
+      <p class="note">A loaded file only fills in this page. Press Apply to send it to the mouse.</p>
+      <h2>Factory reset</h2>
+      <button id="btnReset">Reset mouse to factory defaults</button>
+      <h2>Raw config (bytes 0x00–0x72)</h2>
+      <pre id="raw"></pre>
+    </section>
+  </div>
+</main>
+
+<script>
+"use strict";
+// ---------- protocol (reverse engineered from the official v1.07 tool) ----------
+const VID = 0x3367, PID = 0x1978;
+const RID_CMD = 0xA1, RID_BULK = 0xA0;            // feature reports on the vendor collection (usage page 0xFF01)
+const CMD_INFO = 0x02, CMD_WRITE = 0x11, CMD_READ = 0x12, CMD_RESET = 0x13;
+const CMD_LEN = 63, BULK_LEN = 1040, CFG_LEN = 1024, CFG_OFS = 15; // payload offsets, report ID excluded
+const USED = 0x73;                                 // the official tool only sends bytes 0x00 and 0x05..0x72
+
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+let dev = null, cfg = null, saved = null, busy = false;
+
+// Chrome usually returns the report ID as byte 0 of feature reports (sometimes with the buffer
+// capped at the report size), and this mouse answers with ID 0xA1 even when 0xA0 was requested.
+// Status bytes are only ever 1 or 3, so a leading 0xA0/0xA1 is always the ID.
+function payload(dv) {
+  const u = new Uint8Array(dv.buffer, dv.byteOffset, dv.byteLength);
+  return u[0] === RID_CMD || u[0] === RID_BULK ? u.subarray(1) : u;
+}
+async function sendCmd(cmd) {
+  const p = new Uint8Array(CMD_LEN); p[0] = cmd;
+  await dev.sendFeatureReport(RID_CMD, p);
+}
+async function readStatus() {
+  return payload(await dev.receiveFeatureReport(RID_CMD));
+}
+async function readConfig() {
+  await sendCmd(CMD_READ);
+  await sleep(80);
+  for (let t = 0; t < 10; t++) {
+    const p = payload(await dev.receiveFeatureReport(RID_BULK));
+    if (p[0] === 1) return p.slice(CFG_OFS, CFG_OFS + CFG_LEN);
+    if (p[0] !== 3) throw new Error("mouse returned status " + p[0]);
+    await sleep(100);
+  }
+  throw new Error("mouse stayed busy");
+}
+async function writeConfig(c) {
+  const p = new Uint8Array(BULK_LEN); p[0] = CMD_WRITE;
+  p[CFG_OFS] = c[0];
+  p.set(c.subarray(5, USED), CFG_OFS + 5);
+  for (let t = 0, wait = 300; t < 3; t++, wait += 50) {
+    await dev.sendFeatureReport(RID_BULK, p);
+    await sleep(wait);
+    if ((await readStatus())[0] === 1) return;
+  }
+  throw new Error("mouse did not confirm the write");
+}
+async function readInfo() {
+  await sendCmd(CMD_INFO);
+  await sleep(50);
+  const p = await readStatus();
+  return p.slice(15, 29);
+}
+async function factoryReset() {
+  await sendCmd(CMD_RESET);
+  await sleep(1100);
+  if ((await readStatus())[0] !== 1) throw new Error("mouse did not confirm the reset");
+}
+
+// ---------- config layout ----------
+const O = { polling: 0x05, flags: 0x06, ledLift: 0x08, lod: 0x09, snap: 0x0A, tuning: 0x0B, msync: 0x0C,
+  active: 0x0D, count: 0x0E, stages: 0x23, buttons: 0x37, glass: 0x6F, angle: 0x70, maxfps: 0x71, ack: 0x72 };
+const u16 = (o) => cfg[o] | (cfg[o + 1] << 8);
+const w16 = (o, v) => { cfg[o] = v & 0xff; cfg[o + 1] = (v >> 8) & 0xff; };
+const stageOfs = i => O.stages + 5 * i;            // {u8 xyDiffers, u16 x, u16 y}
+const btnOfs = i => O.buttons + 7 * i;             // {u8 type, u8 code, u16 p1, u16 p2, u8 multiclick}
+function getBtn(i) { const o = btnOfs(i); return { type: cfg[o], code: cfg[o + 1], p1: u16(o + 2), p2: u16(o + 4), filter: cfg[o + 6] }; }
+function setBtn(i, b) { const o = btnOfs(i); cfg[o] = b.type; cfg[o + 1] = b.code; w16(o + 2, b.p1 || 0); w16(o + 4, b.p2 || 0); cfg[o + 6] = b.filter; }
+
+const BTN = { LEFT: 0, RIGHT: 1, MIDDLE: 2, FORWARD: 3, BACK: 4, CPI: 5, WHEEL_UP: 6, WHEEL_DOWN: 7 };
+const POLLING = [125, 250, 500, 1000, 2000, 4000, 8000];
+const LOD_NORMAL = ["0.7 mm", "0.8 mm", "0.9 mm", "1.0 mm", "1.1 mm", "1.2 mm", "1.3 mm", "1.4 mm", "1.5 mm", "1.6 mm", "1.7 mm"];
+
+// Button actions: [label, type, code]. Type 2 = keyboard, 0x0C = fixed CPI carry extra data.
+const ACTIONS = [
+  ["Left click", 0x00, 0x01], ["Right click", 0x00, 0x02], ["Middle click", 0x00, 0x04],
+  ["Forward", 0x00, 0x10], ["Back", 0x00, 0x08],
+  ["Scroll up", 0x01, 0x01], ["Scroll down", 0x01, 0xFF],
+  ["CPI loop", 0x09, 0xF1], ["Fixed CPI", 0x0C, null],
+  ["Play / Pause", 0x20, 0xCD], ["Next track", 0x20, 0xB5], ["Previous track", 0x20, 0xB6],
+  ["Mute", 0x20, 0xE2], ["Volume up", 0x20, 0xE9], ["Volume down", 0x20, 0xEA],
+  ["Browser", 0x18, 0x96], ["File explorer", 0x18, 0x94],
+  ["Keyboard key", 0x02, null], ["Disabled", 0xFF, 0x00],
+];
+function actionIndex(b) {
+  for (let i = 0; i < ACTIONS.length; i++) {
+    const [, t, c] = ACTIONS[i];
+    if (t === b.type && (c === null || c === b.code)) return i;
+  }
+  return -1;
+}
+
+// KeyboardEvent.code -> HID usage (keyboard page 0x07)
+const HID = {};
+"KeyA KeyB KeyC KeyD KeyE KeyF KeyG KeyH KeyI KeyJ KeyK KeyL KeyM KeyN KeyO KeyP KeyQ KeyR KeyS KeyT KeyU KeyV KeyW KeyX KeyY KeyZ Digit1 Digit2 Digit3 Digit4 Digit5 Digit6 Digit7 Digit8 Digit9 Digit0 Enter Escape Backspace Tab Space Minus Equal BracketLeft BracketRight Backslash _ Semicolon Quote Backquote Comma Period Slash CapsLock F1 F2 F3 F4 F5 F6 F7 F8 F9 F10 F11 F12 PrintScreen ScrollLock Pause Insert Home PageUp Delete End PageDown ArrowRight ArrowLeft ArrowDown ArrowUp NumLock NumpadDivide NumpadMultiply NumpadSubtract NumpadAdd NumpadEnter Numpad1 Numpad2 Numpad3 Numpad4 Numpad5 Numpad6 Numpad7 Numpad8 Numpad9 Numpad0 NumpadDecimal IntlBackslash ContextMenu"
+  .split(" ").forEach((k, i) => { if (k !== "_") HID[k] = 0x04 + i; });
+for (let i = 13; i <= 24; i++) HID["F" + i] = 0x68 + i - 13;
+const HID_NAME = {};
+for (const [k, v] of Object.entries(HID)) HID_NAME[v] = k.replace(/^Key|^Digit/, "").replace(/^Arrow/, "Arrow ");
+const MODS = [["Ctrl", 1], ["Shift", 2], ["Alt", 4], ["Win", 8]];
+
+function snapCpi(v) {
+  v = Math.round(Number(v) || 0);
+  if (v < 10) return 10;
+  if (v > 30000) return 30000;
+  return v > 10000 ? Math.round(v / 50) * 50 : Math.round(v / 10) * 10;
+}
+// slider position <-> CPI, same scale as the official tool (0..1400: x10 up to 10000, then 50 per step)
+const posToCpi = p => p <= 1000 ? Math.max(10, p * 10) : (p - 800) * 50;
+const cpiToPos = c => c <= 10000 ? Math.round(c / 10) : Math.round(c / 50) + 800;
+
+// ---------- UI ----------
+const $ = id => document.getElementById(id);
+function setStatus(msg, kind = "") { const s = $("status"); s.textContent = msg; s.className = kind; }
+function markDirty() {
+  const d = saved && cfg && cfg.some((b, i) => b !== saved[i]);
+  $("dirty").hidden = !d;
+  $("raw").textContent = hexdump();
+}
+function hexdump() {
+  if (!cfg) return "";
+  let s = "";
+  for (let o = 0; o < USED; o += 16)
+    s += o.toString(16).padStart(3, "0") + ": " + [...cfg.subarray(o, Math.min(o + 16, USED))].map(b => b.toString(16).padStart(2, "0")).join(" ") + "\n";
+  return s;
+}
+function setBusy(b) {
+  busy = b;
+  for (const id of ["btnReload", "btnApply", "btnReset", "btnImport"]) $(id).disabled = b || !dev;
+}
+
+$("polling").innerHTML = POLLING.map(hz => `<option value="${8000 / hz}">${hz} Hz</option>`).join("");
+
+function render() {
+  // basic
+  $("polling").value = cfg[O.polling];
+  const glass = cfg[O.glass] === 1;
+  $("lod").innerHTML = glass
+    ? `<option value="1">1.0 mm</option><option value="2">2.0 mm</option>`
+    : LOD_NORMAL.map((t, i) => `<option value="${i}">${t}</option>`).join("");
+  $("lod").value = glass ? (cfg[O.lod] === 1 ? 1 : 2) : (cfg[O.lod] <= 10 ? cfg[O.lod] : 3);
+  $("angleSnap").checked = cfg[O.snap] === 1;
+  $("ledLiftOff").checked = cfg[O.ledLift] === 0;
+  const count = Math.min(4, Math.max(1, cfg[O.count] || 1));
+  $("stageCount").value = count;
+  let split = false;
+  for (let i = 0; i < 4; i++) if (u16(stageOfs(i) + 1) !== u16(stageOfs(i) + 3)) split = true;
+  $("xySplit").checked = split;
+  renderStages();
+  // sensor
+  $("motionSync").checked = cfg[O.msync] === 1;
+  $("jitter").checked = (cfg[O.flags] & 0x10) !== 0;
+  $("maxFps").checked = cfg[O.maxfps] === 1;
+  $("glass").checked = glass;
+  $("downshift").value = (cfg[O.tuning] >> 2) & 3;
+  $("smoothing").value = [0, 1, 2].includes(cfg[O.tuning] & 3) ? cfg[O.tuning] & 3 : 2;
+  const a = (cfg[O.angle] << 24) >> 24;
+  $("angle").value = $("angleNum").value = a;
+  // buttons
+  $("slam").checked = (cfg[O.flags] & 0x01) !== 0;
+  $("ack").checked = cfg[O.ack] === 1;
+  renderFilters();
+  // mapping
+  $("leftHanded").checked = isLeftHanded();
+  renderMappings();
+  markDirty();
+}
+
+function renderStages() {
+  const count = Number($("stageCount").value), split = $("xySplit").checked;
+  const active = Math.min(cfg[O.active], count - 1);
+  const box = $("stages"); box.innerHTML = "";
+  for (let i = 0; i < 4; i++) {
+    const o = stageOfs(i), row = document.createElement("div");
+    row.className = "stage" + (i >= count ? " off" : "");
+    const axes = split ? [["X", 1], ["Y", 3]] : [["", 1]];
+    axes.forEach(([ax, off], k) => {
+      if (k === 0) {
+        const radio = Object.assign(document.createElement("input"),
+          { type: "radio", name: "active", value: i, checked: i === active, disabled: i >= count, title: "Active stage" });
+        const label = document.createElement("b");
+        label.textContent = `CPI ${i + 1}${ax ? "  " + ax : ""}`;
+        row.append(radio, label);
+      } else {
+        row.append(document.createElement("span"), Object.assign(document.createElement("span"), { className: "axis", textContent: ax }));
+      }
+      const slider = Object.assign(document.createElement("input"), { type: "range", min: 1, max: 1400, step: 1, className: "slider" });
+      const num = Object.assign(document.createElement("input"), { type: "number", min: 10, max: 30000, step: 10 });
+      slider.value = cpiToPos(u16(o + off)); num.value = u16(o + off);
+      slider.disabled = num.disabled = i >= count;
+      const setVal = v => {
+        v = snapCpi(v); num.value = v; slider.value = cpiToPos(v);
+        w16(o + off, v); if (!split) w16(o + 3, v);
+        cfg[o] = u16(o + 1) !== u16(o + 3) ? 1 : 0;
+        markDirty();
+      };
+      slider.oninput = () => setVal(posToCpi(Number(slider.value)));
+      num.onchange = () => setVal(num.value);
+      row.append(slider, num);
+    });
+    box.append(row);
+  }
+  box.querySelectorAll("input[name=active]").forEach(r => r.onchange = () => { cfg[O.active] = Number(r.value); markDirty(); });
+}
+
+function renderFilters() {
+  const names = ["Left button", "Right button", "Middle button", "Forward button", "Back button"];
+  const box = $("filters"); box.innerHTML = "";
+  const ack = $("ack").checked;
+  names.forEach((name, i) => {
+    const b = getBtn(i), spdt = b.filter === 0xF1 ? "speed" : b.filter === 0xF0 ? "safe" : "off";
+    const row = document.createElement("div"); row.className = "filter";
+    row.innerHTML = `<label>${name}</label><input type="range" min="0" max="25" step="1"><span class="val"></span>`;
+    const [, slider, val] = row.children;
+    const v = spdt === "off" ? Math.min(25, b.filter) : 8;
+    slider.value = v; val.textContent = v;
+    slider.disabled = !ack || spdt !== "off";
+    slider.oninput = () => { val.textContent = slider.value; const x = getBtn(i); x.filter = Number(slider.value); setBtn(i, x); markDirty(); };
+    box.append(row);
+    if (i < 2) {
+      const r2 = document.createElement("div"); r2.className = "filter";
+      r2.innerHTML = `<label class="note" style="margin:0;padding-left:12px">SPDT mode</label>
+        <select><option value="off">OFF</option><option value="speed">GX Speed Mode</option><option value="safe">GX Safe Mode</option></select><span></span>`;
+      const sel = r2.children[1]; sel.value = spdt; sel.disabled = !ack;
+      sel.onchange = () => {
+        const x = getBtn(i);
+        x.filter = sel.value === "speed" ? 0xF1 : sel.value === "safe" ? 0xF0 : 8;
+        setBtn(i, x); renderFilters(); markDirty();
+      };
+      box.append(r2);
+    }
+  });
+}
+
+function isLeftHanded() { const b = getBtn(BTN.RIGHT); return b.type === 0 && b.code === 1; }
+
+function renderMappings() {
+  const lh = isLeftHanded();
+  // In left-handed mode the physical left button is the remappable one (as in the official tool).
+  const rows = [[lh ? BTN.LEFT : BTN.RIGHT, lh ? "Left button" : "Right button"], [BTN.MIDDLE, "Middle button"],
+    [BTN.FORWARD, "Forward button"], [BTN.BACK, "Back button"], [BTN.WHEEL_UP, "Wheel up"], [BTN.WHEEL_DOWN, "Wheel down"]];
+  const box = $("mappings"); box.innerHTML = "";
+  for (const [idx, name] of rows) {
+    const b = getBtn(idx), ai = actionIndex(b);
+    const row = document.createElement("div"); row.className = "btnmap";
+    const opts = ACTIONS.map((a, i) => `<option value="${i}">${a[0]}</option>`).join("") +
+      (ai < 0 ? `<option value="-1">Custom (type ${b.type.toString(16)}, code ${b.code.toString(16)})</option>` : "");
+    row.innerHTML = `<label style="padding-top:6px">${name}</label><div><select>${opts}</select><div class="extra"></div></div>`;
+    const sel = row.querySelector("select"), extra = row.querySelector(".extra");
+    sel.value = ai;
+    const drawExtra = () => {
+      const cur = getBtn(idx); extra.innerHTML = "";
+      if (cur.type === 0x02) {
+        const key = Object.assign(document.createElement("button"), { className: "keycap" });
+        key.textContent = cur.p1 ? (HID_NAME[cur.p1] || "usage 0x" + cur.p1.toString(16)) : "Click, then press a key";
+        key.onclick = () => {
+          key.classList.add("listening"); key.textContent = "Press a key…";
+          const onKey = e => {
+            e.preventDefault(); e.stopPropagation();
+            if (/^(Shift|Control|Alt|Meta|OS)/.test(e.code)) return;
+            window.removeEventListener("keydown", onKey, true);
+            key.classList.remove("listening");
+            const u = HID[e.code];
+            if (!u) { key.textContent = "Unsupported key, try again"; return; }
+            const x = getBtn(idx); x.p1 = u; x.p2 = 0; setBtn(idx, x); markDirty(); drawExtra();
+          };
+          window.addEventListener("keydown", onKey, true);
+        };
+        extra.append(key);
+        for (const [m, bit] of MODS) {
+          const l = document.createElement("label"); l.className = "check";
+          l.innerHTML = `<input type="checkbox" ${cur.code & bit ? "checked" : ""}> ${m}`;
+          l.querySelector("input").onchange = e => { const x = getBtn(idx); x.code = e.target.checked ? x.code | bit : x.code & ~bit; setBtn(idx, x); markDirty(); };
+          extra.append(l);
+        }
+      } else if (cur.type === 0x0C) {
+        for (const [ax, k] of [["X", "p1"], ["Y", "p2"]]) {
+          const l = document.createElement("label"); l.className = "check";
+          l.innerHTML = `${ax} <input type="number" min="10" max="30000" step="10" value="${cur[k]}">`;
+          l.querySelector("input").onchange = e => { const v = snapCpi(e.target.value); e.target.value = v; const x = getBtn(idx); x[k] = v; setBtn(idx, x); markDirty(); };
+          extra.append(l);
+        }
+      }
+    };
+    sel.onchange = () => {
+      const i = Number(sel.value); if (i < 0) return;
+      const [, type, code] = ACTIONS[i], x = getBtn(idx);
+      x.type = type; x.code = code ?? 0; x.p1 = 0; x.p2 = 0;
+      if (type === 0x0C) { x.p1 = x.p2 = 800; }
+      setBtn(idx, x); drawExtra(); markDirty();
+    };
+    drawExtra();
+    box.append(row);
+  }
+}
+
+// control wiring
+$("polling").onchange = e => { cfg[O.polling] = Number(e.target.value); markDirty(); };
+$("lod").onchange = e => { cfg[O.lod] = Number(e.target.value); markDirty(); };
+$("angleSnap").onchange = e => { cfg[O.snap] = e.target.checked ? 1 : 0; markDirty(); };
+$("ledLiftOff").onchange = e => { cfg[O.ledLift] = e.target.checked ? 0 : 1; markDirty(); };
+$("stageCount").onchange = e => {
+  cfg[O.count] = Number(e.target.value);
+  if (cfg[O.active] >= cfg[O.count]) cfg[O.active] = cfg[O.count] - 1;
+  renderStages(); markDirty();
+};
+$("xySplit").onchange = e => {
+  if (!e.target.checked) for (let i = 0; i < 4; i++) { const o = stageOfs(i); w16(o + 3, u16(o + 1)); cfg[o] = 0; }
+  renderStages(); markDirty();
+};
+$("motionSync").onchange = e => { cfg[O.msync] = e.target.checked ? 1 : 0; markDirty(); };
+$("jitter").onchange = e => { cfg[O.flags] = e.target.checked ? cfg[O.flags] | 0x10 : cfg[O.flags] & ~0x10; markDirty(); };
+$("maxFps").onchange = e => { cfg[O.maxfps] = e.target.checked ? 1 : 0; markDirty(); };
+$("downshift").onchange = e => { cfg[O.tuning] = (cfg[O.tuning] & 0xF3) | (Number(e.target.value) << 2); markDirty(); };
+$("smoothing").onchange = e => { cfg[O.tuning] = (cfg[O.tuning] & 0xFC) | Number(e.target.value); markDirty(); };
+const setAngle = v => { v = Math.max(-127, Math.min(127, Math.round(Number(v) || 0))); $("angle").value = $("angleNum").value = v; cfg[O.angle] = v & 0xff; markDirty(); };
+$("angle").oninput = e => setAngle(e.target.value);
+$("angleNum").onchange = e => setAngle(e.target.value);
+$("slam").onchange = e => { cfg[O.flags] = e.target.checked ? cfg[O.flags] | 0x01 : cfg[O.flags] & ~0x01; markDirty(); };
+$("ack").onchange = e => { cfg[O.ack] = e.target.checked ? 1 : 0; renderFilters(); markDirty(); };
+$("leftHanded").onchange = e => {
+  // Same as the official tool: swap slots 0/1 (including their multiclick values), then put
+  // "left click" on whichever physical button becomes the primary.
+  const l = getBtn(BTN.LEFT), r = getBtn(BTN.RIGHT);
+  if (e.target.checked) { setBtn(BTN.LEFT, { ...r, filter: r.filter }); setBtn(BTN.RIGHT, { type: 0, code: 1, p1: 0, p2: 0, filter: l.filter }); }
+  else { setBtn(BTN.RIGHT, { ...l, filter: l.filter }); setBtn(BTN.LEFT, { type: 0, code: 1, p1: 0, p2: 0, filter: r.filter }); }
+  renderMappings(); renderFilters(); markDirty();
+};
+document.querySelectorAll("nav button").forEach(b => b.onclick = () => {
+  document.querySelectorAll("nav button").forEach(x => x.classList.toggle("active", x === b));
+  document.querySelectorAll("section.tab").forEach(s => s.classList.toggle("active", s.id === "tab-" + b.dataset.tab));
+});
+
+// ---------- device lifecycle ----------
+function pickInterface(list) {
+  return list.find(d => d.vendorId === VID && d.productId === PID && d.collections.some(c => c.usagePage === 0xFF01));
+}
+async function attach(d) {
+  dev = d;
+  if (!dev.opened) await dev.open();
+  $("connectPanel").hidden = true; $("app").hidden = false;
+  $("btnConnect").hidden = true;
+  await load();
+}
+async function load() {
+  setBusy(true); setStatus("Reading settings…");
+  try {
+    const info = await readInfo();
+    // same as the official tool: the two version bytes read as hex digits, divided by 100 (0x0110 -> 1.10)
+    const fw = "v" + (parseInt(((info[2] << 8) | info[1]).toString(16), 10) / 100).toFixed(2);
+    $("fw").textContent = "firmware " + fw;
+    $("fwInfo").textContent = `${fw}  (raw: ${[...info.subarray(0, 8)].map(b => b.toString(16).padStart(2, "0")).join(" ")})`;
+    cfg = await readConfig(); saved = cfg.slice();
+    render(); setStatus("Settings loaded", "ok");
+  } catch (e) { setStatus("Read failed: " + e.message, "err"); }
+  setBusy(false);
+}
+$("btnConnect").onclick = async () => {
+  if (!("hid" in navigator)) { $("nohid").hidden = false; return; }
+  try {
+    const list = await navigator.hid.requestDevice({ filters: [{ vendorId: VID, productId: PID, usagePage: 0xFF01 }] });
+    const d = pickInterface(list);
+    if (d) await attach(d); else if (list.length) setStatus("Selected device has no configuration interface", "err");
+  } catch (e) { setStatus("Could not open the mouse: " + e.message, "err"); }
+};
+$("btnReload").onclick = load;
+$("btnApply").onclick = async () => {
+  setBusy(true); setStatus("Writing…");
+  try {
+    await writeConfig(cfg);
+    const back = await readConfig();
+    const ok = back.subarray(5, USED).every((b, i) => b === cfg[5 + i]);
+    cfg = back; saved = back.slice(); render();
+    setStatus(ok ? "Saved to mouse" : "Saved, but the mouse adjusted some values", ok ? "ok" : "warn");
+  } catch (e) { setStatus("Write failed: " + e.message, "err"); }
+  setBusy(false);
+};
+$("btnReset").onclick = async () => {
+  if (!confirm("Reset the mouse to factory defaults? Your current settings will be lost unless you saved them to a file.")) return;
+  setBusy(true); setStatus("Resetting…");
+  try { await factoryReset(); setBusy(false); await load(); setStatus("Factory defaults restored", "ok"); }
+  catch (e) { setStatus("Reset failed: " + e.message, "err"); setBusy(false); }
+};
+$("btnExport").onclick = () => {
+  const data = { device: "Endgame Gear OP1 8k v2", format: 1, config: [...cfg.subarray(0, USED)].map(b => b.toString(16).padStart(2, "0")).join("") };
+  const a = Object.assign(document.createElement("a"), { href: URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: "application/json" })), download: "op1-8k-v2-settings.json" });
+  a.click(); URL.revokeObjectURL(a.href);
+};
+$("btnImport").onclick = () => $("importFile").click();
+$("importFile").onchange = async e => {
+  const f = e.target.files[0]; e.target.value = ""; if (!f) return;
+  try {
+    const j = JSON.parse(await f.text());
+    if (j.format !== 1 || typeof j.config !== "string" || j.config.length !== USED * 2) throw new Error("not an OP1 8k v2 settings file");
+    const glass = cfg[O.glass];
+    for (let i = 0; i < USED; i++) cfg[i] = parseInt(j.config.substr(i * 2, 2), 16);
+    cfg[O.glass] = glass;   // glass mode comes from the mouse, never from a file
+    render(); setStatus("File loaded. Press Apply to send it to the mouse", "warn");
+  } catch (err) { setStatus("Import failed: " + err.message, "err"); }
+};
+window.addEventListener("beforeunload", e => { if (!$("dirty").hidden) e.preventDefault(); });
+
+if ("hid" in navigator) {
+  navigator.hid.addEventListener("disconnect", ev => {
+    if (ev.device === dev) { dev = null; setBusy(false); $("btnConnect").hidden = false; setStatus("Mouse disconnected", "err"); }
+  });
+  navigator.hid.addEventListener("connect", async ev => { if (!dev && pickInterface([ev.device])) await attach(ev.device); });
+  navigator.hid.getDevices().then(l => { const d = pickInterface(l); if (d) attach(d); });
+} else {
+  $("nohid").hidden = false; $("btnConnect").disabled = true;
+}
+</script>
+</body>
+</html>

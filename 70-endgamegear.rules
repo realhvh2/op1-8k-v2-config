@@ -1,0 +1,2 @@
+# Endgame Gear mice: allow the logged-in user (and WebHID in browsers) to access hidraw
+KERNEL=="hidraw*", ATTRS{idVendor}=="3367", MODE="0660", TAG+="uaccess"
